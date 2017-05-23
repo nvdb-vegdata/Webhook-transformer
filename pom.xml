@@ -12,7 +12,7 @@
         <kotlin.version>1.1.2-2</kotlin.version>
         <ktor.version>0.3.2</ktor.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
-        <main.class>no.vegvesen.vt.nvdb.tools.webhookproxy.Main</main.class>
+        <main.class>no.vegvesen.vt.nvdb.tools.webhookproxy.WebhookProxyApplicationKt</main.class>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <slf4j.version>1.7.25</slf4j.version>
     </properties>
@@ -98,6 +98,19 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>${main.class}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.6</version>
                 <executions>
@@ -117,6 +130,45 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.21.0</version>
+                <executions>
+                    <execution>
+                        <id>start</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>build</goal>
+                            <!--<goal>push</goal>-->
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <images>
+                        <image>
+                            <name>nvdbapnevegdata/webhook-proxy:latest</name>
+                            <alias>webhook-proxy</alias>
+                            <build>
+                                <maintainer>nvdb@vegvesen.no</maintainer>
+                                <from>openjdk:8-jre</from>
+                                <assembly>
+                                    <descriptor>docker-assembly.xml</descriptor>
+                                </assembly>
+                                <ports>
+                                    <port>8080</port>
+                                </ports>
+                                <cmd>
+                                    <shell>
+                                        java -jar /maven/webhook-proxy-1.0-SNAPSHOT-jar-with-dependencies.jar
+                                    </shell>
+                                </cmd>
+                            </build>
+
+                        </image>
+                    </images>
+                </configuration>
             </plugin>
         </plugins>
     </build>

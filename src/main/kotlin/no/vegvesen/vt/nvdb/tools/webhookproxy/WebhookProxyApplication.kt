@@ -17,6 +17,8 @@ import org.jetbrains.ktor.routing.Routing
 import org.jetbrains.ktor.routing.post
 
 fun Application.module() {
+    val webhookUrl: String = System.getenv("WEBHOOK_URL")
+            ?: throw IllegalArgumentException("Environment variable WEBHOOK_URL is not defined")
 
     install(CallLogging)
     install(DefaultHeaders)
@@ -26,7 +28,7 @@ fun Application.module() {
             log.info("1 Recieved $splunkMessage")
             val httpClient = HttpClients.createDefault()
 
-            val post = HttpPost("https://mattermost.kantega.no/hooks/y57uqiwe3bdfxfb13nehrntjcc")
+            val post = HttpPost(webhookUrl)
             val content = transformSplunkMessage(splunkMessage)
             val payload = "payload={\"text\": \"${content}\"}"
             post.entity = StringEntity(payload, org.apache.http.entity.ContentType.APPLICATION_FORM_URLENCODED)
@@ -61,5 +63,5 @@ fun transformSplunkMessage(splunkMessage: String): String {
 }
 
 fun main(args: Array<String>) {
-    embeddedServer(Netty, 8080, reloadPackages = listOf("webhookproxy"), module = Application::module).start()
+    embeddedServer(Netty, 8080, module = Application::module).start()
 }
