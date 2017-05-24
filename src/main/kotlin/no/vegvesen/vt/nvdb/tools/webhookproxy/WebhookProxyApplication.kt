@@ -58,34 +58,42 @@ private suspend fun sendMessage(webhookUrl: String, content: String, pipelineCon
 }
 
 fun transformSplunkMessage(splunkMessage: String): String {
-    val parser = JsonParser()
-    val element = parser.parse(splunkMessage)
-    if(element.isJsonObject){
-        val obj = element.asJsonObject
-        val result = obj.getAsJsonObject("result")
-        val host = result.get("host").asString
-        val origin = result.get("ORIGIN").asString
-        val message = result.get("MESSAGE").asString.replace("\"", "\\\"")
-        val source = result.get("source").asString
-        return "## Error on ${host}!\n" +
-                "${origin}: ${message}\n" +
-                "Source: ${source}"
+    try {
+        val parser = JsonParser()
+        val element = parser.parse(splunkMessage)
+        if(element.isJsonObject){
+            val obj = element.asJsonObject
+            val result = obj.getAsJsonObject("result")
+            val host = result.get("host").asString
+            val origin = result.get("ORIGIN").asString
+            val message = result.get("MESSAGE").asString.replace("\"", "\\\"")
+            val source = result.get("source").asString
+            return "## Error on ${host}!\n" +
+                    "${origin}: ${message}\n" +
+                    "Source: ${source}"
+        }
+    } catch(e: Exception) {
+        logger.error("Kunne ikke tolke melding ${splunkMessage}", e)
     }
     return "Kunne ikke tolke ${splunkMessage}"
 }
 
 fun transformElastalertMessage(elastalertMessage: String): String {
-    val parser = JsonParser()
-    val element = parser.parse(elastalertMessage)
-    if(element.isJsonObject){
-        val obj = element.asJsonObject
-        val matches = obj.getAsJsonArray("matches")
-        val result = matches.get(0).asJsonObject
-        val host = result.get("HOSTNAME").asString
-        val origin = result.get("logger_name").asString
-        val message = result.get("message").asString.replace("\"", "\\\"")
-        return "## Error on ${host}!\n" +
-                "${origin}: ${message}"
+    try {
+        val parser = JsonParser()
+        val element = parser.parse(elastalertMessage)
+        if(element.isJsonObject){
+            val obj = element.asJsonObject
+            val matches = obj.getAsJsonArray("matches")
+            val result = matches.get(0).asJsonObject
+            val host = result.get("HOSTNAME").asString
+            val origin = result.get("logger_name").asString
+            val message = result.get("message").asString.replace("\"", "\\\"")
+            return "## Error on ${host}!\n" +
+                    "${origin}: ${message}"
+        }
+    } catch(e: Exception) {
+        logger.error("Kunne ikke tolke melding ${elastalertMessage}", e)
     }
     return "Kunne ikke tolke ${elastalertMessage}"
 }
