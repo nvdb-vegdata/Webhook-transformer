@@ -66,3 +66,30 @@ payload={"text": "## Error on svvpvegkartw01!
 AreaCache: Unknown contract: 423369244
 Source: /data/base-vegkart-01/logs/api-v1.log"}
 ```
+
+And
+```json
+{
+  "matches": [
+    {
+      "thread_name": "http-nio-127.0.0.1-8080-exec-54",
+      "_type": "logs",
+      "requestTime": "1495612074130",
+      "level": "ERROR",
+      "num_hits": 6,
+      "@timestamp": "2017-05-24T07:47:54.199Z",
+      "HOSTNAME": "datafangst.kantega.no",
+      "_index": "datafangst-logs-2017.05.24",
+      "requestNo": "44843",
+      "level_value": 40000,
+      "logger_name": "no.svv.nvdb.datafangst.security.openam.OpenAMApiAuthenticator",
+      "num_matches": 6,
+      "message": "Result from login server was not http code 200",
+      "_id": "AVw5bSjdE8CvodlHhim7"
+    }
+  ],
+  "rule": "Datafangst error"
+}
+
+```
+to something similar.
