@@ -65,7 +65,7 @@ fun transformSplunkMessage(splunkMessage: String): String {
         val result = obj.getAsJsonObject("result")
         val host = result.get("host").asString
         val origin = result.get("ORIGIN").asString
-        val message = result.get("MESSAGE").asString
+        val message = result.get("MESSAGE").asString.replace("\"", "\\\"")
         val source = result.get("source").asString
         return "## Error on ${host}!\n" +
                 "${origin}: ${message}\n" +
@@ -83,7 +83,7 @@ fun transformElastalertMessage(elastalertMessage: String): String {
         val result = matches.get(0).asJsonObject
         val host = result.get("HOSTNAME").asString
         val origin = result.get("logger_name").asString
-        val message = result.get("message").asString
+        val message = result.get("message").asString.replace("\"", "\\\"")
         return "## Error on ${host}!\n" +
                 "${origin}: ${message}"
     }
