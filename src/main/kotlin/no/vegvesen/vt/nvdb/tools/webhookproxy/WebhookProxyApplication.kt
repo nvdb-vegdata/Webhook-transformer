@@ -1,5 +1,6 @@
 package no.vegvesen.vt.nvdb.tools.webhookproxy
 
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpPost
@@ -42,9 +43,9 @@ fun Application.module() {
 
 }
 
-private suspend fun sendMessage(webhookUrl: String, content: String, pipelineContext: PipelineContext<ApplicationCall>) {
+private suspend fun sendMessage(webhookUrl: String, content: JsonObject, pipelineContext: PipelineContext<ApplicationCall>) {
     val post = HttpPost(webhookUrl)
-    val payload = "payload={\"text\": \"${content}\"}"
+    val payload = "payload={\"attachments\": [${content}], \"username\": \"PROD ERROR\"}"
     post.entity = StringEntity(payload, ContentType.APPLICATION_FORM_URLENCODED)
     HttpClients.createDefault().use {
         it.execute(post).use {
@@ -57,7 +58,10 @@ private suspend fun sendMessage(webhookUrl: String, content: String, pipelineCon
     pipelineContext.call.respond("OK")
 }
 
-fun transformSplunkMessage(splunkMessage: String): String {
+fun transformSplunkMessage(splunkMessage: String): JsonObject {
+    val o = JsonObject()
+    o.addProperty("color", "danger")
+
     try {
         val parser = JsonParser()
         val element = parser.parse(splunkMessage)
@@ -68,17 +72,26 @@ fun transformSplunkMessage(splunkMessage: String): String {
             val origin = result.get("ORIGIN").asString
             val message = result.get("MESSAGE").asString.replace("\"", "\\\"")
             val source = result.get("source").asString
-            return "## Error on ${host}!\n" +
+
+            val summary = "## Error on ${host}!\n" +
                     "${origin}: ${message}\n" +
                     "Source: ${source}"
+            o.addProperty("fallback", summary)
+            o.addProperty("title", "Error on ${host}!")
+            o.addProperty("text", "${origin}: ${message}")
         }
     } catch(e: Exception) {
         logger.error("Kunne ikke tolke melding ${splunkMessage}", e)
+        o.addProperty("title", "Error!")
+        o.addProperty("text", "Kunne ikke tolke ${splunkMessage}")
     }
-    return "Kunne ikke tolke ${splunkMessage}"
+    return o
 }
 
-fun transformElastalertMessage(elastalertMessage: String): String {
+fun transformElastalertMessage(elastalertMessage: String): JsonObject {
+    val o = JsonObject()
+    o.addProperty("color", "danger")
+
     try {
         val parser = JsonParser()
         val element = parser.parse(elastalertMessage)
@@ -89,13 +102,19 @@ fun transformElastalertMessage(elastalertMessage: String): String {
             val host = result.get("HOSTNAME").asString
             val origin = result.get("logger_name").asString
             val message = result.get("message").asString.replace("\"", "\\\"")
-            return "## Error on ${host}!\n" +
+
+            val summary = "## Error on ${host}!\n" +
                     "${origin}: ${message}"
+            o.addProperty("fallback", summary)
+            o.addProperty("title", "Error on ${host}!")
+            o.addProperty("text", "${origin}: ${message}")
         }
     } catch(e: Exception) {
         logger.error("Kunne ikke tolke melding ${elastalertMessage}", e)
+        o.addProperty("title", "Error!")
+        o.addProperty("text", "Kunne ikke tolke ${elastalertMessage}")
     }
-    return "Kunne ikke tolke ${elastalertMessage}"
+    return o
 }
 
 fun main(args: Array<String>) {
