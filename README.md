@@ -93,3 +93,5 @@ And
 
 ```
 to something similar.
+
+Testes med `url -i --header "Content-Type:application/json" -X POST -d @/tmp/webhook http://localhost:8080/splunk` 
