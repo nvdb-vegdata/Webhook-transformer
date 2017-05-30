@@ -69,16 +69,17 @@ fun transformSplunkMessage(splunkMessage: String): JsonObject {
             val obj = element.asJsonObject
             val result = obj.getAsJsonObject("result")
             val host = result.get("host").asString
-            val origin = result.get("ORIGIN").asString
-            val message = result.get("MESSAGE").asString.replace("\"", "\\\"").replace(";", "")
+            val origin = if(result.has("ORIGIN")) { result.get("ORIGIN").asString} else {""}
+            val message = if(result.has("MESSAGE")) result.get("MESSAGE").asString.replace("\"", "\\\"").replace(";", "") else result.get("_raw").asString
             val source = result.get("source").asString
 
             val summary = "## Error on ${host}!\n" +
                     "${origin}: ${message}\n" +
                     "Source: ${source}"
-            o.addProperty("fallback", summary)
+            o.addProperty("fallback", summary.substring(0, Math.min(2999, summary.length)))
             o.addProperty("title", "Error on ${host}!")
-            o.addProperty("text", "${origin}: ${message}")
+            val text = "${origin}: ${message}"
+            o.addProperty("text", text.substring(0, Math.min(2999, text.length)))
         }
     } catch(e: Exception) {
         logger.error("Kunne ikke tolke melding ${splunkMessage}", e)
@@ -103,11 +104,11 @@ fun transformElastalertMessage(elastalertMessage: String): JsonObject {
             val origin = result.get("logger_name").asString
             val message = result.get("message").asString.replace("\"", "\\\"").replace(";", "")
 
-            val summary = "## Error on ${host}!\n" +
-                    "${origin}: ${message}"
-            o.addProperty("fallback", summary)
+            val text = "${origin}: ${message}"
+            val summary = "## Error on ${host}!\n$text"
+            o.addProperty("fallback", summary.substring(0, Math.min(2999, summary.length)))
             o.addProperty("title", "Error on ${host}!")
-            o.addProperty("text", "${origin}: ${message}")
+            o.addProperty("text", text.substring(0, Math.min(2999, text.length)))
         }
     } catch(e: Exception) {
         logger.error("Kunne ikke tolke melding ${elastalertMessage}", e)
