@@ -9,35 +9,41 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
 import org.jetbrains.ktor.application.*
 import org.jetbrains.ktor.host.embeddedServer
+import org.jetbrains.ktor.locations.*
 import org.jetbrains.ktor.netty.Netty
 import org.jetbrains.ktor.pipeline.PipelineContext
 import org.jetbrains.ktor.routing.Routing
-import org.jetbrains.ktor.routing.post
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 val logger: Logger = LoggerFactory.getLogger("WebhookProxy")
 
-fun Application.module() {
-    val splunkWebhookUrl: String = System.getenv("SPLUNK_WEBHOOK_URL")
-            ?: throw IllegalArgumentException("Environment variable SPLUNK_WEBHOOK_URL is not defined")
-    val elastalertWebhookUrl: String = System.getenv("ELASTALERT_WEBHOOK_URL")
-            ?: throw IllegalArgumentException("Environment variable SPLUNK_WEBHOOK_URL is not defined")
+@location("/splunk/{id}")
+data class SplunkApplication(val id: String)
 
+@location("/elastalert/{id}")
+data class ElastalertApplication(val id: String)
+
+fun Application.module() {
+    val splunkWebhookUrl: String = getConfig("SPLUNK_WEBHOOK_URL")
+            ?: throw IllegalArgumentException("Environment variable SPLUNK_WEBHOOK_URL is not defined")
+    val elastalertWebhookUrl: String = getConfig("ELASTALERT_WEBHOOK_URL")
+            ?: throw IllegalArgumentException("Environment variable SPLUNK_WEBHOOK_URL is not defined")
+    install(Locations)
     install(Routing) {
-        post("/splunk") {
+        post<SplunkApplication> {
             val splunkMessage = call.request.receive(String::class)
             logger.info("Recieved ${splunkMessage}")
             val content = transformSplunkMessage(splunkMessage)
 
-            sendMessage(splunkWebhookUrl, content, this)
+            sendMessage(getWebhookUrl(it.id, splunkWebhookUrl), content, this)
         }
-        post("/elastalert") {
+        post<ElastalertApplication> {
             val elastalertMessage = call.request.receive(String::class)
             logger.info("Recieved ${elastalertMessage}")
             val content = transformElastalertMessage(elastalertMessage)
 
-            sendMessage(elastalertWebhookUrl, content, this)
+            sendMessage(getWebhookUrl(it.id, elastalertWebhookUrl), content, this)
         }
     }
 
@@ -49,7 +55,7 @@ private suspend fun sendMessage(webhookUrl: String, content: JsonObject, pipelin
     post.entity = StringEntity(payload, ContentType.APPLICATION_FORM_URLENCODED)
     HttpClients.createDefault().use {
         it.execute(post).use {
-            val responseBody = it.entity.content.bufferedReader().use { it.readText() }
+            val responseBody = isToString(it.entity.content)
             if (it.statusLine.statusCode != HttpStatus.SC_OK) {
                 logger.error("Response status ${it.statusLine.statusCode}: ${responseBody}")
             }
@@ -120,4 +126,12 @@ fun transformElastalertMessage(elastalertMessage: String): JsonObject {
 
 fun main(args: Array<String>) {
     embeddedServer(Netty, 8080, module = Application::module).start()
+}
+
+fun getWebhookUrl(appId: String, defaultUrl: String): String {
+    return getConfig("${appId.toUpperCase()}_WEBHOOK_URL") ?: defaultUrl
+}
+
+fun getConfig(key: String): String? {
+    return System.getenv(key) ?: System.getProperty(key, null)
 }

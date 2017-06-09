@@ -84,7 +84,7 @@ And
       "level_value": 40000,
       "logger_name": "no.svv.nvdb.datafangst.security.openam.OpenAMApiAuthenticator",
       "num_matches": 6,
-      "message": "Result from login server was not http code 200",
+      "message": "Result from login webhookServer was not http code 200",
       "_id": "AVw5bSjdE8CvodlHhim7"
     }
   ],
