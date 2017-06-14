@@ -1,6 +1,5 @@
 package no.vegvesen.vt.nvdb.tools.webhookproxy
 
-import com.google.gson.JsonParser
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
@@ -22,7 +21,6 @@ import org.junit.Assert.assertThat
 import org.junit.BeforeClass
 import org.junit.Test
 import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
 
 class IntegrationTest {
 
@@ -62,19 +60,28 @@ class IntegrationTest {
 
     @Test fun splunkAPIV2Bullshit(){
         val url = "http://localhost:8080/splunk/apiv2"
-        val payload = isToString(javaClass.getResourceAsStream("/data/apiv2bullshit.json"))
-        val message = postAndGetWebhookPayload(url, payload, "apiv2")
+        val (incomming, expected) = loadPayloads("apiv2bullshit.json")
+        val message = postAndGetWebhookPayload(url, incomming, "apiv2")
 
-        assertThat(message, CoreMatchers.`is`("payload={\"attachments\": [{\"color\":\"danger\",\"fallback\":\"## Error on svvpvegkartw01!\\nBufferedLogger: Uventet feil for URL: http://www.vegvesen.no/nvdb/api/v2/vegobjekter/343.json/134560?_bullshit\\nFor input string:\\nSource: /data/base-vegkart-01/logs/api-v2.log\",\"title\":\"Error on svvpvegkartw01!\",\"text\":\"BufferedLogger: Uventet feil for URL: http://www.vegvesen.no/nvdb/api/v2/vegobjekter/343.json/134560?_bullshit\\nFor input string:\"}], \"username\": \"PROD ERROR\"}"))
+        assertThat(message, CoreMatchers.`is`("payload=${expected}"))
     }
 
     @Test fun datafangstInvaliduuid(){
         val url = "http://localhost:8080/elastalert/datafangst"
-        val payload = isToString(javaClass.getResourceAsStream("/data/datafangstInvaliduuid.json"))
-        val message = postAndGetWebhookPayload(url, payload, "datafangst")
+        val (incomming, expected) = loadPayloads("datafangstInvaliduuid.json")
 
-        val expected = "payload={\"attachments\": [{\"color\":\"danger\",\"fallback\":\"## Error on datafangst.kantega.no!\\nno.svv.nvdb.datafangst.jersey.ContractParticipantFilter: Error performing contract access control\",\"title\":\"Error on datafangst.kantega.no!\",\"text\":\"no.svv.nvdb.datafangst.jersey.ContractParticipantFilter: Error performing contract access control\"}], \"username\": \"PROD ERROR\"}"
-        assertThat(message, CoreMatchers.`is`(expected))
+        val message = postAndGetWebhookPayload(url, incomming, "datafangst")
+
+        assertThat(message, CoreMatchers.`is`("payload=${expected}"))
+    }
+
+    @Test fun solrInvalidNumber() {
+        val url = "http://localhost:8080/splunk/apiv2"
+        val (incomming, expected) = loadPayloads("apiv2SolrInvalidNumber.json")
+
+        val message = postAndGetWebhookPayload(url, incomming, "apiv2")
+
+        assertThat(message, CoreMatchers.`is`("payload=${expected}"))
     }
 
     private fun postAndGetWebhookPayload(url: String, payload: String, app: String): String? {
