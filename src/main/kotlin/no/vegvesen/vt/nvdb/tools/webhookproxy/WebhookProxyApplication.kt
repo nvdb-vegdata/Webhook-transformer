@@ -51,8 +51,8 @@ fun Application.module() {
 
 private suspend fun sendMessage(webhookUrl: String, content: JsonObject, pipelineContext: PipelineContext<ApplicationCall>) {
     val post = HttpPost(webhookUrl)
-    val payload = "payload={\"attachments\": [${content}], \"username\": \"PROD ERROR\"}"
-    post.entity = StringEntity(payload, ContentType.APPLICATION_FORM_URLENCODED)
+    val payload = "{\"attachments\": [${content}], \"username\": \"PROD ERROR\"}"
+    post.entity = StringEntity(payload, ContentType.APPLICATION_JSON)
     HttpClients.createDefault().use {
         it.execute(post).use {
             val responseBody = isToString(it.entity.content)

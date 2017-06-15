@@ -63,7 +63,7 @@ class IntegrationTest {
         val (incomming, expected) = loadPayloads("apiv2bullshit.json")
         val message = postAndGetWebhookPayload(url, incomming, "apiv2")
 
-        assertThat(message, CoreMatchers.`is`("payload=${expected}"))
+        assertThat(message, CoreMatchers.`is`(expected))
     }
 
     @Test fun datafangstInvaliduuid(){
@@ -72,7 +72,7 @@ class IntegrationTest {
 
         val message = postAndGetWebhookPayload(url, incomming, "datafangst")
 
-        assertThat(message, CoreMatchers.`is`("payload=${expected}"))
+        assertThat(message, CoreMatchers.`is`(expected))
     }
 
     @Test fun solrInvalidNumber() {
@@ -81,7 +81,7 @@ class IntegrationTest {
 
         val message = postAndGetWebhookPayload(url, incomming, "apiv2")
 
-        assertThat(message, CoreMatchers.`is`("payload=${expected}"))
+        assertThat(message, CoreMatchers.`is`(expected))
     }
 
     private fun postAndGetWebhookPayload(url: String, payload: String, app: String): String? {
