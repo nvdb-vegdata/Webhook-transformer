@@ -76,7 +76,7 @@ fun transformSplunkMessage(splunkMessage: String): JsonObject {
             val result = obj.getAsJsonObject("result")
             val host = result.get("host").asString
             val origin = if(result.has("ORIGIN")) { result.get("ORIGIN").asString} else {""}
-            val message = if(result.has("MESSAGE")) result.get("MESSAGE").asString.replace("\"", "\\\"").replace(";", "") else result.get("_raw").asString
+            val message = if(result.has("MESSAGE") && result.get("MESSAGE").asString.isNotEmpty()) result.get("MESSAGE").asString.replace("\"", "\\\"").replace(";", "") else result.get("_raw").asString
             val source = result.get("source").asString
 
             val summary = "## Error on ${host}!\n" +

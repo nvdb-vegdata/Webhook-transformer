@@ -35,6 +35,7 @@ class IntegrationTest {
             System.setProperty("APIV2_WEBHOOK_URL", "http://localhost:8999/webhook/apiv2")
             System.setProperty("VEGKART_WEBHOOK_URL", "http://localhost:8999/webhook/vegkart")
             System.setProperty("NVDBIND_WEBHOOK_URL", "http://localhost:8999/webhook/nvdbind")
+            System.setProperty("APISKRIV_WEBHOOK_URL", "http://localhost:8999/webhook/apiskriv")
             System.setProperty("DATAFANGST_WEBHOOK_URL", "http://localhost:8999/webhook/datafangst")
 
             @location("/webhook/{id}")
@@ -49,7 +50,7 @@ class IntegrationTest {
                     }
                 }
             }.start()
-            webhookProxyServer = embeddedServer(Netty, 8080, module = Application::module).start()
+            webhookProxyServer = embeddedServer(Netty, 18080, module = Application::module).start()
         }
 
         @AfterClass @JvmStatic fun tearDown() {
@@ -59,7 +60,7 @@ class IntegrationTest {
     }
 
     @Test fun splunkAPIV2Bullshit(){
-        val url = "http://localhost:8080/splunk/apiv2"
+        val url = "http://localhost:18080/splunk/apiv2"
         val (incomming, expected) = loadPayloads("apiv2bullshit.json")
         val message = postAndGetWebhookPayload(url, incomming, "apiv2")
 
@@ -67,7 +68,7 @@ class IntegrationTest {
     }
 
     @Test fun datafangstInvaliduuid(){
-        val url = "http://localhost:8080/elastalert/datafangst"
+        val url = "http://localhost:18080/elastalert/datafangst"
         val (incomming, expected) = loadPayloads("datafangstInvaliduuid.json")
 
         val message = postAndGetWebhookPayload(url, incomming, "datafangst")
@@ -76,10 +77,19 @@ class IntegrationTest {
     }
 
     @Test fun solrInvalidNumber() {
-        val url = "http://localhost:8080/splunk/apiv2"
+        val url = "http://localhost:18080/splunk/apiv2"
         val (incomming, expected) = loadPayloads("apiv2SolrInvalidNumber.json")
 
         val message = postAndGetWebhookPayload(url, incomming, "apiv2")
+
+        assertThat(message, CoreMatchers.`is`(expected))
+    }
+
+    @Test fun apiSkriv() {
+        val url = "http://localhost:18080/splunk/apiskriv"
+        val (incomming, expected) = loadPayloads("apiskriv.json")
+
+        val message = postAndGetWebhookPayload(url, incomming, "apiskriv")
 
         assertThat(message, CoreMatchers.`is`(expected))
     }
