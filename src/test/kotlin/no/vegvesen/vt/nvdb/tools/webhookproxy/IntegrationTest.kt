@@ -37,6 +37,8 @@ class IntegrationTest {
             System.setProperty("NVDBIND_WEBHOOK_URL", "http://localhost:8999/webhook/nvdbind")
             System.setProperty("APISKRIV_WEBHOOK_URL", "http://localhost:8999/webhook/apiskriv")
             System.setProperty("DATAFANGST_WEBHOOK_URL", "http://localhost:8999/webhook/datafangst")
+            System.setProperty("K2LES_WEBHOOK_URL", "http://localhost:8999/webhook/k2les")
+            System.setProperty("K2LES_CHANNEL", "k2les")
 
             @location("/webhook/{id}")
             data class Webhook(val id: String)
@@ -90,6 +92,15 @@ class IntegrationTest {
         val (incomming, expected) = loadPayloads("apiskriv.json")
 
         val message = postAndGetWebhookPayload(url, incomming, "apiskriv")
+
+        assertThat(message, CoreMatchers.`is`(expected))
+    }
+
+    @Test fun k2channel() {
+        val url = "http://localhost:18080/splunk/k2les"
+        val (incomming, expected) = loadPayloads("k2les.json")
+
+        val message = postAndGetWebhookPayload(url, incomming, "k2les")
 
         assertThat(message, CoreMatchers.`is`(expected))
     }

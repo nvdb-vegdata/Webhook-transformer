@@ -36,22 +36,23 @@ fun Application.module() {
             logger.info("Recieved ${splunkMessage}")
             val content = transformSplunkMessage(splunkMessage)
 
-            sendMessage(getWebhookUrl(it.id, splunkWebhookUrl), content, this)
+            sendMessage(it.id, getWebhookUrl(it.id, splunkWebhookUrl), content, this)
         }
         post<ElastalertApplication> {
             val elastalertMessage = call.request.receive(String::class)
             logger.info("Recieved ${elastalertMessage}")
             val content = transformElastalertMessage(elastalertMessage)
 
-            sendMessage(getWebhookUrl(it.id, elastalertWebhookUrl), content, this)
+            sendMessage(it.id, getWebhookUrl(it.id, elastalertWebhookUrl), content, this)
         }
     }
 
 }
 
-private suspend fun sendMessage(webhookUrl: String, content: JsonObject, pipelineContext: PipelineContext<ApplicationCall>) {
+private suspend fun sendMessage(id: String, webhookUrl: String, content: JsonObject, pipelineContext: PipelineContext<ApplicationCall>) {
     val post = HttpPost(webhookUrl)
-    val payload = "{\"attachments\": [${content}], \"username\": \"PROD ERROR\"}"
+    val channel = getChannel(id)
+    val payload = "{\"attachments\": [${content}], \"username\": \"PROD ERROR\"${channel}}"
     post.entity = StringEntity(payload, ContentType.APPLICATION_JSON)
     HttpClients.createDefault().use {
         it.execute(post).use {
@@ -130,6 +131,15 @@ fun main(args: Array<String>) {
 
 fun getWebhookUrl(appId: String, defaultUrl: String): String {
     return getConfig("${appId.toUpperCase()}_WEBHOOK_URL") ?: defaultUrl
+}
+
+fun getChannel(appId: String): String {
+    val channel = getConfig("${appId.toUpperCase()}_CHANNEL")
+    return if(channel.isNullOrBlank()) {
+        ""
+    } else {
+        ", \"channel\": \"${channel}\""
+    }
 }
 
 fun getConfig(key: String): String? {
