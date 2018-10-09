@@ -107,8 +107,10 @@ fun transformElastalertMessage(elastalertMessage: String): JsonObject {
             val obj = element.asJsonObject
             val matches = obj.getAsJsonArray("matches")
             val result = matches.get(0).asJsonObject
-            val host = result.get("HOSTNAME").asString
-            val origin = result.get("logger_name").asString
+            val hostname = result.get("HOSTNAME") ?: result.get("host")
+            val host = hostname.asString
+            val loggername = result.get("logger_name")
+            val origin = if(loggername != null) loggername.asString else ""
             val message = result.get("message").asString.replace("\"", "\\\"").replace(";", "")
 
             val text = "${origin}: ${message}"

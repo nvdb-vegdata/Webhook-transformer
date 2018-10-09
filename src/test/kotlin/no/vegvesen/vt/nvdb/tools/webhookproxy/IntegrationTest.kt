@@ -38,7 +38,7 @@ class IntegrationTest {
             System.setProperty("APISKRIV_WEBHOOK_URL", "http://localhost:8999/webhook/apiskriv")
             System.setProperty("DATAFANGST_WEBHOOK_URL", "http://localhost:8999/webhook/datafangst")
             System.setProperty("K2LES_WEBHOOK_URL", "http://localhost:8999/webhook/k2les")
-            System.setProperty("K2LES_CHANNEL", "k2les")
+            System.setProperty("K2LES_WEBHOOK_CHANNEL", "k2les")
 
             @location("/webhook/{id}")
             data class Webhook(val id: String)
