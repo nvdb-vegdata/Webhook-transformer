@@ -97,7 +97,7 @@ class IntegrationTest {
     }
 
     @Test fun k2channel() {
-        val url = "http://localhost:18080/splunk/k2les"
+        val url = "http://localhost:18080/elastalert/k2les"
         val (incomming, expected) = loadPayloads("k2les.json")
 
         val message = postAndGetWebhookPayload(url, incomming, "k2les")

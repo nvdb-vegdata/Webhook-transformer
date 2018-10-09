@@ -134,7 +134,7 @@ fun getWebhookUrl(appId: String, defaultUrl: String): String {
 }
 
 fun getChannel(appId: String): String {
-    val channel = getConfig("${appId.toUpperCase()}_CHANNEL")
+    val channel = getConfig("${appId.toUpperCase()}_WEBHOOK_CHANNEL")
     return if(channel.isNullOrBlank()) {
         ""
     } else {
